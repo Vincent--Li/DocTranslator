@@ -68,6 +68,20 @@ cd DocTranslator
 ```
 
 ### 2. 配置环境变量
+uv venv --python 3.12.9 my-venv
+source my-venv/bin/activate
+uv pip install -r requirements
+
+docker run -d \
+  --name mysql-server \
+  -p 3306:3306 \
+  -e MYSQL_ROOT_PASSWORD=StrongPassw0rd \
+  -e MYSQL_DATABASE=app_db \
+  -e MYSQL_USER=app_user \
+  -e MYSQL_PASSWORD=UserPassw0rd \
+  -v mysql-data:/var/lib/mysql \
+  -v ~/mysql/config/my.cnf:/etc/mysql/my.cnf \
+  mysql:8.4.5
 
 在 `backend/.env` 文件中填写必要的环境变量
 

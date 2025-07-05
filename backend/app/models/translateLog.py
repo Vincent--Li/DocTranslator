@@ -22,4 +22,18 @@ class TranslateLog(db.Model):
     word_count = db.Column(db.Integer, default=0)  # 字数统计
     backup_model = db.Column(db.String(64), default='')  # 备用模型
 
-
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'md5_key': self.md5_key,
+            'source': self.source,
+            'content': self.content,
+            'target_lang': self.target_lang,
+            'model': self.model,
+            'created_at': self.created_at,
+            'prompt': self.prompt,
+            'api_url': self.api_url,
+            'api_key': self.api_key,
+            'word_count': self.word_count,
+            'backup_model': self.backup_model
+        }

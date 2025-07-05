@@ -5,10 +5,13 @@ import asyncio
 import datetime
 from pathlib import Path
 from . import common, db, to_translate
-import babeldoc.high_level
-from babeldoc.document_il.translator.translator import OpenAITranslator
-from babeldoc.docvision.doclayout import DocLayoutModel
-from babeldoc.translation_config import TranslationConfig, WatermarkOutputMode
+
+from babeldoc.translator.translator import OpenAITranslator
+from babeldoc.docvision.base_doclayout import DocLayoutModel
+from babeldoc.format.pdf.translation_config import TranslationConfig, WatermarkOutputMode
+from babeldoc.format.pdf.high_level import async_translate
+from babeldoc.docvision.table_detection.rapidocr import RapidOCRModel
+import babeldoc
 
 logger = logging.getLogger(__name__)
 
@@ -43,8 +46,8 @@ async def async_translate_pdf(trans):
         original_path = Path(trans['file_path'])
 
         # 初始化翻译库
-        babeldoc.high_level.init()
-
+        babeldoc.format.pdf.high_level.init() 
+        
         # 转换语言代码
         target_lang = common.convert_language_name_to_code(trans['lang'])
 
@@ -52,7 +55,7 @@ async def async_translate_pdf(trans):
         doc_layout_model = DocLayoutModel.load_onnx()
 
         # 初始化表格模型（根据参数决定是否启用）
-        # table_model = RapidOCRModel() if trans.get('translate_table', False) else None
+        table_model = RapidOCRModel() if trans.get('translate_table', False) else None
 
         # 创建翻译器实例
         translator = OpenAITranslator(
@@ -62,7 +65,6 @@ async def async_translate_pdf(trans):
             api_key=trans['api_key'],
             base_url=trans.get('api_url', 'https://api.openai.com/v1'),
             ignore_cache=False
-
         )
 
         # 完整翻译配置
@@ -75,19 +77,19 @@ async def async_translate_pdf(trans):
             lang_out=target_lang,
             doc_layout_model=doc_layout_model,
             watermark_output_mode=WatermarkOutputMode.NoWatermark,
-            min_text_length=5,
+            min_text_length=3,
             pages=None,
-            qps=3,
-            # translate_table_text=True,
-            # table_model=table_model,  # 传递表格模型
+            qps=16,
+            #translate_table_text=True,
+            table_model=table_model,  # 传递表格模型
             # translate_table_text=True,  # 表格翻译开关
-            # show_char_box=True, # 调试表格识别
-            no_dual=True,  # 是否生成双语PDF
-            no_mono=False,  # 是否生成单语PDF
+            show_char_box=True, # 调试表格识别
+            no_dual=False,  # 是否生成双语PDF
+            no_mono=True,  # 是否生成单语PDF
         )
 
         # 执行翻译
-        async for event in babeldoc.high_level.async_translate(config):
+        async for event in async_translate(config):
             if event["type"] == "progress":
                 db.execute(
                     "UPDATE translate SET process=%s WHERE id=%s",
@@ -107,9 +109,10 @@ async def async_translate_pdf(trans):
                     )
 
                 # 计算token使用量
-                # token_count = getattr(translator, 'token_count', 0)
-                # prompt_tokens = getattr(translator, 'prompt_token_count', 0)
-                # completion_tokens = getattr(translator, 'completion_token_count', 0)
+                token_count = getattr(translator, 'token_count', 0)
+                prompt_tokens = getattr(translator, 'prompt_token_count', 0)
+                completion_tokens = getattr(translator, 'completion_token_count', 0)
+                logger.info(f"token_count: {token_count}, prompt_tokens: {prompt_tokens}, completion_tokens: {completion_tokens}")
 
                 # 触发完成回调
                 spend_time = (datetime.datetime.now() - start_time).total_seconds()
@@ -144,7 +147,7 @@ def start(trans):
 
         # 初始化任务状态
         db.execute(
-            "UPDATE translate SET status='processing', process=0, start_at=NOW() WHERE id=%s",
+            "UPDATE translate SET status='process', process=0, start_at=NOW() WHERE id=%s",
             trans['id']
         )
 

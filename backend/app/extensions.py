@@ -33,7 +33,11 @@ def init_extensions(app):
     register_routes(api)
     api.init_app(app)
 
-
+    # 为所有模型生成 SQL
+    from sqlalchemy.schema import CreateTable
+    for table in db.metadata.tables.values():
+        print(f"\n-- Table: {table.name}")
+        print(str(CreateTable(table)))
 
     # @jwt.user_lookup_loader
     # def user_lookup_callback(_jwt_header, jwt_data):

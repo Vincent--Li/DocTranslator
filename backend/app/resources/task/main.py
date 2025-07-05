@@ -51,7 +51,6 @@ def main_wrapper(task_id, config, origin_path):
                     # target_path=target_path,
                     trans=config  # 传递翻译配置
                 )
-                print('config配置项', config)
                 return status
 
         current_app.logger.error(f"不支持的文件类型: {extension}")

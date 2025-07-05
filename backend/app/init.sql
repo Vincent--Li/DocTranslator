@@ -242,6 +242,26 @@ CREATE TABLE `user` (
 INSERT INTO `user` (`id`, `name`, `password`, `email`, `deleted_flag`, `created_at`, `updated_at`) VALUES
 (1, 'admin', '123456', 'admin', 'N', NULL, NULL);
 
+
+--
+-- 表的结构 `translate_logs`
+--
+CREATE TABLE translate_logs (
+        id int(11) NOT NULL, 
+        md5_key VARCHAR(100) NOT NULL, 
+        source TEXT NOT NULL, 
+        content TEXT, 
+        target_lang VARCHAR(32), 
+        model VARCHAR(255) NOT NULL, 
+        created_at DATETIME, 
+        prompt VARCHAR(1024), 
+        api_url VARCHAR(255), 
+        api_key VARCHAR(255), 
+        word_count INTEGER, 
+        backup_model VARCHAR(64), 
+        PRIMARY KEY (id), 
+        UNIQUE (md5_key)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 --
 -- 转储表的索引
 --
@@ -307,6 +327,11 @@ ALTER TABLE `user`
   ADD PRIMARY KEY (`id`);
 
 --
+-- 表的索引 `translate_logs`
+--
+ALTER TABLE `translate_logs`
+  ADD PRIMARY KEY (`id`);
+--
 -- 在导出的表使用AUTO_INCREMENT
 --
 
@@ -363,6 +388,12 @@ ALTER TABLE `translate`
 --
 ALTER TABLE `user`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- 使用表AUTO_INCREMENT `translate_logs`
+--
+ALTER TABLE `translate_logs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

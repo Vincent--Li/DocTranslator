@@ -353,8 +353,7 @@ def req(text, target_lang, model, prompt, ext):
         {"role": "system", "content": prompt.replace("{target_lang}", target_lang)},
         {"role": "user", "content": text}
     ]
-    # print(openai.base_url)
-    print(message)
+    # print(message)
     # 禁用 OpenAI 的日志输出
     logging.getLogger("openai").setLevel(logging.WARNING)
     # 禁用 httpx 的日志输出
@@ -367,7 +366,6 @@ def req(text, target_lang, model, prompt, ext):
     # for choices in response.choices:
     #     print(choices.message.content)
     content = response.choices[0].message.content
-    # print(content)
     return content
 
 
