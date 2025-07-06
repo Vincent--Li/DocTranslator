@@ -58,13 +58,21 @@ class FileUploadResource(Resource):
 
             # 保存文件
             file.save(save_path)
+            temp_save_path = save_path
+            # 计算文件的 MD5
+            file_md5 = self.calculate_md5(save_path) 
+            # md5 加到filename前面
+            filename = f"{file_md5}@{filename}" 
+            save_path = os.path.join(save_dir, filename)
+            # 文件从 temp_save_path 移到 save_path
+            os.rename(temp_save_path, save_path)
+
             # 更新用户存储空间
             customer.storage += file_size
             db.session.commit()
             # 生成 UUID
             file_uuid = str(uuid.uuid4())
-            # 计算文件的 MD5
-            file_md5 = self.calculate_md5(save_path)
+
 
             # 创建翻译记录
             translate_record = Translate(

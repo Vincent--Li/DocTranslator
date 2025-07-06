@@ -12,6 +12,10 @@ from babeldoc.format.pdf.translation_config import TranslationConfig, WatermarkO
 from babeldoc.format.pdf.high_level import async_translate
 from babeldoc.docvision.table_detection.rapidocr import RapidOCRModel
 import babeldoc
+import pytz
+from flask import current_app
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +41,7 @@ def clean_output_filename(original_path: Path, output_dir: str, config: Translat
 async def async_translate_pdf(trans):
     """异步PDF翻译核心函数"""
     try:
-        start_time = datetime.datetime.now()
+        start_time = datetime.datetime.now(pytz.timezone(current_app._get_current_object().config['TIMEZONE']))
         original_path = Path(trans['file_path'])
 
         # 初始化翻译库
@@ -110,7 +114,9 @@ async def async_translate_pdf(trans):
                 logger.info(f"token_count: {token_count}, prompt_tokens: {prompt_tokens}, completion_tokens: {completion_tokens}")
 
                 # 触发完成回调
-                spend_time = (datetime.datetime.now() - start_time).total_seconds()
+                end_time = datetime.datetime.now(pytz.timezone(current_app._get_current_object().config['TIMEZONE']))
+                spend_time=common.display_spend(start_time, end_time)
+
                 to_translate.complete(
                     trans,
                     text_count=1,  # PDF按文件计数
@@ -140,9 +146,11 @@ def start(trans):
         if not original_path.exists():
             raise FileNotFoundError(f"文件不存在: {trans['file_path']}")
 
+        start_time = datetime.datetime.now(pytz.timezone(current_app._get_current_object().config['TIMEZONE']))
         # 初始化任务状态
         db.execute(
-            "UPDATE translate SET status='process', process=0, start_at=NOW() WHERE id=%s",
+            "UPDATE translate SET status='process', process=0, start_at=%s WHERE id=%s",
+            start_time,
             trans['id']
         )
 
