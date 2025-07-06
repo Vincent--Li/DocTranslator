@@ -81,10 +81,11 @@ async def async_translate_pdf(trans):
             qps=16,
             #translate_table_text=True,
             table_model=table_model,  # 传递表格模型
-            # translate_table_text=True,  # 表格翻译开关
+            translate_table_text=True,  # 表格翻译开关
             show_char_box=True, # 调试表格识别
             no_dual=True,  # 是否生成双语PDF
             no_mono=False,  # 是否生成单语PDF
+            skip_scanned_detection=True,
         )
 
         # 执行翻译
