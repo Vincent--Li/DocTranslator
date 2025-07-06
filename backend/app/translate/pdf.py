@@ -54,7 +54,7 @@ async def async_translate_pdf(trans):
         doc_layout_model = DocLayoutModel.load_onnx()
 
         # 初始化表格模型（根据参数决定是否启用）
-        table_model = RapidOCRModel() if trans.get('translate_table', False) else None
+        table_model = RapidOCRModel()
 
         # 创建翻译器实例
         translator = OpenAITranslator(
