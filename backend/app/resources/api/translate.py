@@ -243,7 +243,7 @@ class TranslateListResource(Resource):
             data.append({
                 'id': t.id,
                 'file_type': file_type,
-                'origin_filename': t.origin_filename,
+                'origin_filename': t.origin_filename.split("@")[-1],
                 'status': t.status,
                 'status_name': status_name,
                 'process': float(t.process),  # 将 Decimal 转换为 float
@@ -252,7 +252,7 @@ class TranslateListResource(Resource):
                 'start_at': t.start_at.strftime('%Y-%m-%d %H:%M:%S') if t.start_at else "--",
                 # 开始时间
                 'lang': get_unified_lang_name(t.lang), # 标准输出语言中文名称
-                'target_filepath': t.target_filepath,
+                # 'target_filepath': t.target_filepath,
                 'uuid': t.uuid
             })
 
@@ -386,7 +386,7 @@ class TranslateDeleteResource(Resource):
 
 
 class TranslateDownloadResource(Resource):
-    # @jwt_required()
+    @jwt_required()
     def get(self, id):
         """通过 ID 下载单个翻译结果文件[^5]"""
         # 查询翻译记录
@@ -403,7 +403,7 @@ class TranslateDownloadResource(Resource):
         response = make_response(send_file(
             translate.target_filepath,
             as_attachment=True,
-            download_name=os.path.basename(translate.target_filepath)
+            download_name=os.path.basename(translate.target_filepath).split("@")[-1]
         ))
 
         # 禁用缓存

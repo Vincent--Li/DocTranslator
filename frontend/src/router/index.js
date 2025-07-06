@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Layout from '@/pages/layout/index.vue'
 import { useUserStore } from '@/store/user'
-import { ElMessage } from 'element-plus'
+
 //配置路由
 const constantRoute = [
   {

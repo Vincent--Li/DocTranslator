@@ -61,6 +61,8 @@ cd DocTranslator
 uv venv --python 3.12.9 my-venv
 source my-venv/bin/activate
 uv pip install -r requirements
+FLASK_DEBUG=1 FLASK_RUN_RELOADER_TYPE=watchdog flask run #DEBUG模式运行代码
+
 
 docker run -d \
   --name mysql-server \

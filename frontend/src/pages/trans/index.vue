@@ -168,7 +168,8 @@
               <template v-if="item.status == 'done'">
                 <el-link
                   class="icon_down"
-                  :href="API_URL + '/api/translate/download/' + item.id"
+                  href="#"
+                  @click.prevent="downTransFile(item)"
                   target="_blank"
                 >
                   <span class="icon_handle"> <DownloadIcon /></span>
@@ -736,9 +737,10 @@ function delAllTransFile() {
 //下载全部文件
 async function downAllTransFile() {
   try {
+
     const response = await fetch(API_URL + '/api/translate/download/all', {
       headers: {
-        token: `${localStorage.getItem('token')}` // 手动设置 JWT Token
+        token: `${JSON.parse(localStorage.getItem('user-info')).token}` // 手动设置 JWT Token
       }
     })
 
@@ -763,6 +765,42 @@ async function downAllTransFile() {
     ElMessage.error('文件下载失败，请稍后重试')
   }
 }
+
+//下载全部文件
+async function downTransFile(item) {
+  try {
+
+    const response = await fetch(API_URL + '/api/translate/download/' + item.id, {
+      headers: {
+        token: `${JSON.parse(localStorage.getItem('user-info')).token}` // 手动设置 JWT Token
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error('文件下载失败')
+    }
+
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+
+    // 创建 `<a>` 标签并触发下载
+    const a = document.createElement('a')
+    a.href = url
+    // origin_filename(文件名可能有多个.) , 先提取suffix
+    const splits = item.origin_filename.split('.')
+    const suffix = splits.pop()
+    a.download = splits.join(".") +"_" + item.lang + "." + suffix
+
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    window.URL.revokeObjectURL(url) // 释放 URL 对象
+  } catch (error) {
+    console.error('下载失败:', error)
+    ElMessage.error('文件下载失败，请稍后重试')
+  }
+}
+
 onMounted(() => {
   if (userStore.token) {
     getTranslatesData(1)
