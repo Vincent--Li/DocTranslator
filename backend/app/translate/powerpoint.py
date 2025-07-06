@@ -20,32 +20,17 @@ def start(trans):
     wb = pptx.Presentation(trans['file_path']) 
     print(trans['file_path'])
     slides = wb.slides
+
+    # 提取文本
     texts=[]
     for slide in slides:
         for shape in slide.shapes:
-            if shape.has_table:
-                table = shape.table
-                print(table)
-                rows = len(table.rows)
-                cols = len(table.columns)
-                for r in range(rows):
-                    row_data = []
-                    for c in range(cols):
-                        cell_text = table.cell(r, c).text
-                        if cell_text!=None and len(cell_text)>0 and not common.is_all_punc(cell_text):
-                            texts.append({"text":cell_text,"row":r,"column":c, "complete":False})
-            if not shape.has_text_frame:
-                continue
-            text_frame = shape.text_frame
-            for paragraph in text_frame.paragraphs:
-                text=paragraph.text
-                if text!=None and len(text)>0 and not common.is_all_punc(text):
-                    texts.append({"text":text, "complete":False})
+            texts.extend(pptx_extract_text_from_shape(shape))
     max_run=max_threads if len(texts)>max_threads else len(texts)
-    before_active_count=threading.activeCount()
+    before_active_count=threading.active_count()
     event=threading.Event()
     while run_index<=len(texts)-1:
-        if threading.activeCount()<max_run+before_active_count:
+        if threading.active_count()<max_run+before_active_count:
             if not event.is_set():
                 thread = threading.Thread(target=to_translate.get,args=(trans,event,texts,run_index))
                 thread.start()
@@ -63,31 +48,11 @@ def start(trans):
         else:
             time.sleep(1)
 
+    # 回写翻译
     text_count=0
     for slide in slides:
         for shape in slide.shapes:
-            if shape.has_table:
-                table = shape.table
-                rows = len(table.rows)
-                cols = len(table.columns)
-                for r in range(rows):
-                    row_data = []
-                    for c in range(cols):
-                        cell_text = table.cell(r, c).text
-                        if cell_text!=None and len(cell_text)>0 and not common.is_all_punc(cell_text):
-                            item=texts.pop(0)
-                            table.cell(r, c).text=item['text']
-                            text_count+=item['count']
-                          
-            if not shape.has_text_frame:
-                continue
-            text_frame = shape.text_frame
-            for paragraph in text_frame.paragraphs:
-                text=paragraph.text
-                if text!=None and len(text)>0 and not common.is_all_punc(text) and len(texts)>0:
-                    item=texts.pop(0)
-                    paragraph.text=item['text']
-                    text_count+=item['count']
+            text_count += pptx_write_translation_to_shape(shape, texts)
 
     wb.save(trans['target_file'])
     end_time = datetime.datetime.now()
@@ -96,3 +61,47 @@ def start(trans):
     return True
 
 
+def pptx_extract_text_from_shape(shape):
+    ### pptx文件特定方法，提取pptx中待翻译的文本块
+    texts = []
+    if shape.shape_type == 6:  # GroupShape 类型
+        for s in shape.shapes:
+            texts.extend(pptx_extract_text_from_shape(s))
+    elif shape.has_text_frame:
+        for para in shape.text_frame.paragraphs:
+            for run in para.runs:
+                # 纯符号不用翻译
+                if run.text.strip():
+                    texts.append({"text":run.text, "complete":False})
+    return texts
+
+def pptx_write_translation_to_shape6(shape, texts):
+    ### pptx文件特定方法，提取pptx中待翻译的文本块
+    tmp_text_count = 0
+    if shape.shape_type == 6:  # GroupShape 类型
+        for s in shape.shapes:
+            tmp_text_count += pptx_write_translation_to_shape6(s, texts)
+    elif shape.has_text_frame:
+        for para in shape.text_frame.paragraphs:
+            for run in para.runs:
+                # 纯符号不用翻译
+                if run.text.strip():
+                    item = texts.pop(0)
+                    run.text = item['text']
+                    tmp_text_count+=item['count']
+    return tmp_text_count
+        
+def pptx_write_translation_to_shape(shape, texts):
+    ### 回写翻译结果到pptx文件
+    tmp_text_count = 0
+    if shape.shape_type == 6:  # GroupShape 类型
+        for s in shape.shapes:
+            tmp_text_count += pptx_write_translation_to_shape6(s, texts)
+    elif shape.has_text_frame:
+        for para in shape.text_frame.paragraphs:
+            for run in para.runs:
+                if run.text and run.text.strip():
+                    item=texts.pop(0)
+                    run.text=item['text']
+                    tmp_text_count+=item['count']
+    return tmp_text_count

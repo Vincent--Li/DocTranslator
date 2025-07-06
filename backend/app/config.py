@@ -38,13 +38,13 @@ class Config:
     ALLOWED_EXTENSIONS = {'docx', 'xlsx', 'pptx', 'pdf', 'txt', 'md', 'csv', 'xls', 'doc'}
     # UPLOAD_FOLDER = '/uploads'  # 建议使用绝对路径
     MAX_FILE_SIZE = int(os.getenv('MAX_FILE_SIZE', 30)) * 1024 * 1024  # 30MB
-    MAX_USER_STORAGE = int(os.getenv('MAX_USER_STORAGE', 100 ))* 1024 * 1024  # 默认100MB
+    MAX_USER_STORAGE = int(os.getenv('MAX_USER_STORAGE', 1000 ))* 1024 * 1024  # 默认100MB
     # 翻译结果存储配置
     STORAGE_FOLDER = '/app/storage'  # 翻译结果存储路径
     STATIC_FOLDER = '/public/static'  # 设置静态文件路径
 
     # 系统版本配置
-    SYSTEM_VERSION = 'business'  # business/community
+    SYSTEM_VERSION = 'community'  # business/community
     SITE_NAME = '智能翻译平台'
 
     # API配置
