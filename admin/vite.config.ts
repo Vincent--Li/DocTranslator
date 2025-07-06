@@ -33,15 +33,15 @@ export default ({ mode }: ConfigEnv): UserConfigExport => {
       /** 端口被占用时，是否直接退出 */
       strictPort: false,
       /** 接口代理 */
-      // proxy: {
-      //   "/api": {
-      //     target: "http://127.0.0.1:5000",
-      //     ws: true,
-      //     rewrite: (path) => path.replace(/^\/api/, ""),
-      //     /** 是否允许跨域 */
-      //     changeOrigin: true
-      //   }
-      // },
+      proxy: {
+        "/api": {
+          target: "http://127.0.0.1:5000",
+          ws: true,
+          rewrite: (path) => path.replace(/^\/api/, ""),
+          /** 是否允许跨域 */
+          changeOrigin: true
+        }
+      },
       /** 预热常用文件，提高初始页面加载速度 */
       warmup: {
         clientFiles: ["./src/layouts/**/*.vue"]
