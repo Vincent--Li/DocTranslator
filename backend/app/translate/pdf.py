@@ -16,22 +16,17 @@ import babeldoc
 logger = logging.getLogger(__name__)
 
 
-def clean_output_filename(original_path: Path, output_dir: str) -> Path:
+def clean_output_filename(original_path: Path, output_dir: str, config: TranslationConfig) -> Path:
     """清理babeldoc生成的多余后缀"""
     stem = original_path.stem.split('.')[0]
     new_path = Path(output_dir) / f"{stem}{original_path.suffix}"
-
+    logger.info(f"clean_output_filename: {new_path}")
     # 支持所有可能的输出文件名变体
     for suffix in [
-        '.dual', '.mono',
-        '.no_watermark.en.dual', '.no_watermark.en.mono',
-        '.en.dual', '.en.mono',
-        '.no_watermark.zh.mono', '.no_watermark.zh.dual',
-        '.zh.dual', '.zh.mono',
-        '.no_watermark.zh.mono',
-        '.no_watermark.en.mono',
+        f'.no_watermark.{config.lang_out}.{'mono' if config.no_dual else 'dual' }',
     ]:
         temp_path = Path(output_dir) / f"{stem}{suffix}{original_path.suffix}"
+        logger.info(f"temp_path: {temp_path}")
         if temp_path.exists():
             shutil.move(temp_path, new_path)
             break
@@ -84,8 +79,8 @@ async def async_translate_pdf(trans):
             table_model=table_model,  # 传递表格模型
             # translate_table_text=True,  # 表格翻译开关
             show_char_box=True, # 调试表格识别
-            no_dual=False,  # 是否生成双语PDF
-            no_mono=True,  # 是否生成单语PDF
+            no_dual=True,  # 是否生成双语PDF
+            no_mono=False,  # 是否生成单语PDF
         )
 
         # 执行翻译
@@ -98,12 +93,12 @@ async def async_translate_pdf(trans):
                 )
             elif event["type"] == "finish":
                 # 处理输出文件名
-                final_path = clean_output_filename(original_path, trans['target_path_dir'])
-
+                final_path = clean_output_filename(original_path, trans['target_path_dir'], config)
+                print(f"translate_resulte : {event['translate_result']}")
                 # 更新数据库记录
                 if final_path:
                     db.execute(
-                        "UPDATE translate SET target_file=%s WHERE id=%s",
+                        "UPDATE translate SET target_filepath=%s WHERE id=%s",
                         str(final_path),
                         trans['id']
                     )
