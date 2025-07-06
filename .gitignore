@@ -39,3 +39,4 @@ gitignore
 更新.txt
 frontend/dist
 admin/dist
+backend/my-venv
