@@ -355,9 +355,9 @@ def req(text, target_lang, model, prompt, ext):
     ]
     # print(message)
     # 禁用 OpenAI 的日志输出
-    logging.getLogger("openai").setLevel(logging.WARNING)
+    logging.getLogger("openai").setLevel(logging.DEBUG)
     # 禁用 httpx 的日志输出
-    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpx").setLevel(logging.DEBUG)
     response = openai.chat.completions.create(
         model=model,  # 使用GPT-3.5版本
         messages=message,
@@ -365,7 +365,9 @@ def req(text, target_lang, model, prompt, ext):
     )
     # for choices in response.choices:
     #     print(choices.message.content)
+
     content = response.choices[0].message.content
+    print(content)
     return content
 
 
@@ -516,6 +518,7 @@ def check_translated(content):
 #     return en(encoding.encode(content))
 
 def use_backup_model(trans, event, texts, index, message):
+    print("use_backup_model")
     if trans['backup_model'] != None and trans['backup_model'] != "":
         trans['model'] = trans['backup_model']
         trans['backup_model'] = ""

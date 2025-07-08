@@ -109,7 +109,7 @@
 </template>
 
 <script setup>
-import Filing from '@/components/Filing.vue'
+import Filing from '@/components/filing.vue'
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { formatTime } from '@/utils/tools'
